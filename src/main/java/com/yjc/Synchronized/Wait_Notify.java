@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * 正确使用 wait notify 以及 sleep的方式
  * 场景：小南必须要有烟才干活，没有烟就不干活一直等待
  *      小女必须等她的外卖到了才干活，不然就一直等待
+ *      使用 while + wait 的方式，防止虚假唤醒
  */
 @Slf4j(topic = "c.Wait_Notify")
 public class Wait_Notify {

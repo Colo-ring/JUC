@@ -8,7 +8,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j(topic = "c.GuardedObject")
 public class GuardedObject {
+    private int id;
+
     private Object response;
+
+    public GuardedObject() {
+    }
+
+    public GuardedObject(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
 
     // 获取结果
     public Object get(long timeout) {

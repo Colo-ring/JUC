@@ -9,15 +9,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j(topic = "c.TwoPhaseTermination")
-public class TwoPhaseTermination {
+public class TwoPhaseTermination_Volatile {
     private Thread monitor;
+
+    private volatile boolean stop = false;
 
     // 启动监控线程
     public void start() {
         monitor = new Thread(() -> {
             while (true) {
                 Thread current = Thread.currentThread();
-                if (current.isInterrupted()) {
+                if (stop) {
                     log.debug("料理后事");
                     break;
                 }
@@ -25,9 +27,6 @@ public class TwoPhaseTermination {
                     Thread.sleep(1000);
                     log.debug("执行监控记录");
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    // 重新设置打断标记
-                    current.interrupt();
                 }
             }
         });
@@ -35,6 +34,7 @@ public class TwoPhaseTermination {
     }
 
     public void stop() {
+        stop = true;
         monitor.interrupt();
     }
 

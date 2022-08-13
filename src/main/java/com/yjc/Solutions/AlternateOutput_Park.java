@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @create 2022/8/10 15:17
  * 面试题：交替打印 abc —————— Park-UnPark 方法
  */
-public class AlternateOutput_Park extends ReentrantLock {
+public class AlternateOutput_Park {
     private int loopNum;
 
     public AlternateOutput_Park(int loopNum) {

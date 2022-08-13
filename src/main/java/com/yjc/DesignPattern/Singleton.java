@@ -21,6 +21,7 @@ public final class Singleton {
         return INSTANCE;
     }
 
+
     // 比较推荐的内部类实现方式：
     /*private Singleton() {}
     private static class LazyHolder {

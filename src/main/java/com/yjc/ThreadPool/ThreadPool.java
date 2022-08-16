@@ -20,6 +20,9 @@ public class ThreadPool {
     // 线程集合
     private final Set<Worker> workers = new HashSet<>();
 
+    // 拒绝策略接口
+    private RejectPolicy<Runnable> rejectPolicy;
+
     private final int coreSize;
 
     // 获取任务的超时时间
@@ -27,11 +30,13 @@ public class ThreadPool {
 
     private final TimeUnit timeUnit;
 
-    public ThreadPool(int coreSize, long timeout, TimeUnit timeUnit, int queueCapacity) {
+    public ThreadPool(int coreSize, long timeout, TimeUnit timeUnit,
+                      int queueCapacity, RejectPolicy<Runnable> rejectPolicy) {
         this.coreSize = coreSize;
         this.timeout = timeout;
         this.timeUnit = timeUnit;
         this.taskQueue = new BlockingQueue<>(queueCapacity);
+        this.rejectPolicy = rejectPolicy;
     }
 
     // 执行任务
@@ -45,8 +50,9 @@ public class ThreadPool {
                 workers.add(worker);
                 worker.start();
             } else {
-                log.debug("{} 加入队列", task);
-                taskQueue.put(task);
+                // 拒绝策略
+                taskQueue.tryPut(rejectPolicy, task);
+                // taskQueue.put(task); // 死等
             }
         }
     }

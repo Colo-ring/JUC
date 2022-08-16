@@ -1,16 +1,14 @@
 package com.yjc.ThreadPool;
 
-import java.sql.Time;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * @author IntelliYJC
- * @create 2022/8/16 14:40
- */
+@Slf4j(topic = "c.BlockingQueue")
 public class BlockingQueue<T> {
     private final Deque<T> queue = new ArrayDeque<>();
 
@@ -70,18 +68,43 @@ public class BlockingQueue<T> {
         }
     }
 
-    public void put(T element) {
+    public void put(T task) {
         lock.lock();
         try {
             while (queue.size() == capacity) {
                 try {
+                    log.debug("{} 等待加入任务队列...", task);
                     fullWaitSet.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            queue.addLast(element);
+            log.debug("{} 加入任务队列", task);
+            queue.addLast(task);
             emptyWaitSet.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // 带超时时间的阻塞添加
+    public boolean offer(T task, long timeout, TimeUnit timeUnit) {
+        lock.lock();
+        try {
+            long nanos = timeUnit.toNanos(timeout);
+            while (queue.size() == capacity) {
+                try {
+                    log.debug("{} 等待加入任务队列...", task);
+                    if (nanos <= 0) return false;
+                    nanos = fullWaitSet.awaitNanos(nanos);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            log.debug("{} 加入任务队列", task);
+            queue.addLast(task);
+            emptyWaitSet.signal();
+            return true;
         } finally {
             lock.unlock();
         }
@@ -97,4 +120,19 @@ public class BlockingQueue<T> {
     }
 
 
+    public void tryPut(RejectPolicy<T> rejectPolicy, T task) {
+        lock.lock();
+        try {
+           // 判断队列是否已满
+            if (queue.size() == capacity) {
+                rejectPolicy.reject(this, task);
+            } else { // 有空闲
+                log.debug("{} 加入任务队列", task);
+                queue.addLast(task);
+                emptyWaitSet.signal();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 }
